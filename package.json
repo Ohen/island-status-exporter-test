@@ -2,8 +2,8 @@
   "name": "island-status-exporter",
   "version": "0.0.1-dev",
   "description": "drop status file",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "dist/status-exporter.js",
+  "typings": "dist/status-exporter.d.ts",
   "author": "ohen <matoda88@gmail.com>",
   "contributors": [],
   "scripts": {
