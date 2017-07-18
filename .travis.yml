@@ -1,0 +1,18 @@
+language: node_js
+
+sudo: false
+
+node_js:
+  - "6"
+
+install:
+  - npm install -g jasmine gulp typescript
+  - npm install
+
+script:
+  - ISLAND_LOGGER_LEVEL=crit npm run coverage
+
+after_script:
+  - npm i coveralls && cat ./coverage/lcov-remap.info | coveralls
+  - npm i codeclimate-test-reporter && codeclimate-test-reporter < ./coverage/lcov-remap.info
+

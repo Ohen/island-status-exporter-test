@@ -1,0 +1,35 @@
+{
+  "name": "island-status-exporter",
+  "version": "0.0.1-dev",
+  "description": "drop status file",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "author": "ohen <matoda88@gmail.com>",
+  "contributors": [],
+  "scripts": {
+    "prepublish": "gulp build",
+    "build": "gulp build",
+    "watch": "gulp build && gulp watch",
+    "clean": "gulp clean",
+    "test": "gulp build && DEBUG=* jasmine",
+    "coverage": "gulp coverage"
+  },
+  "dependencies": {
+    "@types/jasmine": "^2.5.38",
+    "@types/node": "^6.0.48",
+    "@types/fs-extra": "2.1.0",
+    "@types/lodash": "4.14.56",
+    "fs-extra": "^4.0.0",
+    "lodash": "^4.16.1",
+    "source-map-support": "^0.4.2"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-istanbul": "^1.1.1",
+    "gulp-jasmine": "^2.4.1",
+    "gulp-sourcemaps": "^1.6.0",
+    "remap-istanbul": "^0.6.4",
+    "typescript": "<2.2",
+    "std-mocks": "^1.0.1"
+  }
+}
