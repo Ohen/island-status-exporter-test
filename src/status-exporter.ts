@@ -1,5 +1,6 @@
 require('source-map-support').install();
 import * as _ from 'lodash';
+import * as usage from 'usage';
 import fs = require('fs-extra');
 
 let fileName: string;
@@ -15,11 +16,27 @@ export namespace StatusExporter {
   }
 
   export async function saveStatusJsonFile() {
-    console.log('============================ SVAE FILE====================', fileName);
+    console.log('============================ SVAE FILE ====================', fileName);
+    await lookupProcess();
     await calculateAvgStatus();
-    await fs.writeFileSync(fileName + '.tmp', JSON.stringify(data, null, 2), 'utf8'); // 쓴게 완료 되면 
+    await fs.writeFileSync(fileName + '.tmp', JSON.stringify(data, null, 2), 'utf8');
     clearData();
     return await moveJsonFile(fileName + '.tmp', fileName);
+  }
+
+  async function lookupProcess() {
+    const usageOptions = { keepHistory: true };
+    return new Promise((res, rej) => {
+        usage.lookup(process.pid, usageOptions, function(err, result) {
+          if (err) {
+              console.log("error:" + err + '\n');
+              return;
+          }
+          data['cpu'] = (result.cpu).toFixed(2);
+          data['memory'] = (result.memory / 1024 / 1024).toFixed(2); //MB
+          return res();
+      });
+    })
   }
 
   async function moveJsonFile(oldPath, newPath) {
@@ -46,10 +63,15 @@ export namespace StatusExporter {
         data[type][k] = {
           TPS
         };
-        if( type === 'event' ) {
-          data[type][k]['AvgReceiveMessageTimeByMQ'] = AvgTime;
-        } else {
-          data[type][k]['AvgResponseTime'] = AvgTime;
+        switch (type){
+          case 'event':
+            data[type][k]['AvgReceiveMessageTimeByMQ'] = AvgTime;
+            break;
+          case 'rpc':
+            data[type][k]['AvgResponseTime'] = AvgTime;
+            break;
+          default:
+            data[type][k]['AvgTime'] = AvgTime;
         }
       });
     });
