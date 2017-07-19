@@ -9,10 +9,14 @@ let cacheData: { [type: string]: { [name: string]: { totalTime?: number, count?:
 let data = {};
 
 export namespace StatusExporter {
-  export function initialize(using: boolean, name?: string) {
+  export function initialize(using: boolean, option: {name?: string, hostname?: string, servicename?: string}) {
+    option = option || {};
     statusExport = using;
-    if(name && !name.match('.json')) name += '.json';
-    fileName = (name || 'status.json');
+    if(!option.name) option.name = option.hostname + '.' + option.servicename + '.' + 'status.json';
+    console.log('file name', option.name);
+    if(option.name && !option.name.match('.json')) option.name += '.json';
+    fileName = (option.name || 'status.json');
+    return fileName;
   }
 
   export async function saveStatusJsonFile() {

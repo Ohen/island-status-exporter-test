@@ -1,5 +1,6 @@
 package
 island-*.tgz
+*status.json
 
 # Logs
 logs

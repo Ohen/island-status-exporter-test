@@ -1,8 +1,6 @@
 import fs = require('fs-extra');
 import { StatusExporter } from '../status-exporter';
 
-const fileName = 'status.json';
-
 function spec(fn) {
 	return async (done) => {
 		try {
@@ -13,7 +11,7 @@ function spec(fn) {
 		}
 	}
 }
-StatusExporter.initialize(true, fileName);
+const fileName = StatusExporter.initialize(true, { servicename: 'STATUS_EXPORTER', hostname: 'TEST' });
 
 describe('StatusExporter', () => {
 	it('clear Data after Save Status.json', spec(async () => {
@@ -55,4 +53,9 @@ describe('StatusExporter', () => {
 		await StatusExporter.saveStatusJsonFile();
 		const result1 = await fs.readFileSync(fileName, 'utf8');
 	}));
+
+	afterAll(async (done) => {
+		// await fs.removeSync(fileName);
+		done();
+  });
 });
