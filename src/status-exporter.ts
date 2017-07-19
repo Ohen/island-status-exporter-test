@@ -38,7 +38,8 @@ export namespace StatusExporter {
       await _.forEach(value, (v, k) => {
         let AvgTime;
         if(v.totalTime) AvgTime = v.totalTime / v.count;
-        const measuringTime = ((+new Date() - v.startAt) / 1000) | 1;
+        console.log('=================================== spend Time Ms: ', (+new Date() - v.startAt))
+        const measuringTime = ((+new Date() - v.startAt) / 1000) || 0.001;
         const TPS = v.count / measuringTime;
         if(!data[type]) data[type] = {};
 
@@ -72,7 +73,7 @@ export namespace StatusExporter {
       return;
     }
 
-    cacheData[type][name]['totalTime'] = Number(cacheData[type][name]['totalTime']|0) + time;
+    cacheData[type][name]['totalTime'] = Number(cacheData[type][name]['totalTime'] || 0) + time;
   }
  
   export async function pushTransactionAndTimeData(type, name, time){
@@ -84,6 +85,6 @@ export namespace StatusExporter {
     }
 
     ++cacheData[type][name]['count'];
-    cacheData[type][name]['totalTime'] = Number(cacheData[type][name]['totalTime']|0) + time;
+    cacheData[type][name]['totalTime'] = Number(cacheData[type][name]['totalTime'] || 0) + time;
   }
 }
