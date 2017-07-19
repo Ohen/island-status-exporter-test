@@ -1,6 +1,6 @@
 {
   "name": "island-status-exporter",
-  "version": "0.0.1-dev",
+  "version": "0.0.5-dev",
   "description": "drop status file",
   "main": "dist/status-exporter.js",
   "typings": "dist/status-exporter.d.ts",
