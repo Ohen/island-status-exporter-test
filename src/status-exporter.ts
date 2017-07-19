@@ -9,14 +9,13 @@ let cacheData: { [type: string]: { [name: string]: { totalTime?: number, count?:
 let data = {};
 
 export namespace StatusExporter {
-  export function initialize(using: boolean, name?: string){
+  export function initialize(using: boolean, name?: string) {
     statusExport = using;
     if(name && !name.match('.json')) name += '.json';
     fileName = (name || 'status.json');
   }
 
   export async function saveStatusJsonFile() {
-    console.log('============================ SVAE FILE ====================', fileName);
     await lookupProcess();
     await calculateAvgStatus();
     await fs.writeFileSync(fileName + '.tmp', JSON.stringify(data, null, 2), 'utf8');
@@ -32,8 +31,8 @@ export namespace StatusExporter {
               console.log("error:" + err + '\n');
               return;
           }
-          data['cpu'] = (result.cpu).toFixed(2);
-          data['memory'] = (result.memory / 1024 / 1024).toFixed(2); //MB
+          data['cpu'] = Number((result.cpu).toFixed(2));
+          data['memory'] = Number((result.memory / 1024 / 1024).toFixed(2)); //MB
           return res();
       });
     })
@@ -55,7 +54,6 @@ export namespace StatusExporter {
       await _.forEach(value, (v, k) => {
         let AvgTime;
         if(v.totalTime) AvgTime = v.totalTime / v.count;
-        console.log('=================================== spend Time Ms: ', (+new Date() - v.startAt))
         const measuringTime = ((+new Date() - v.startAt) / 1000) || 0.001;
         const TPS = v.count / measuringTime;
         if(!data[type]) data[type] = {};
