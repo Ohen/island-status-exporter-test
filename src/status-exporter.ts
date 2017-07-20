@@ -3,9 +3,16 @@ import * as _ from 'lodash';
 import * as usage from 'usage';
 import fs = require('fs-extra');
 
+interface CollectData {
+  totalTime?: number,
+  count?: number,
+  transactionCount?: number,
+  startAt: number
+}
+
 let fileName: string;
 let statusExport: boolean;
-let cacheData: { [type: string]: { [name: string]: { totalTime?: number, count?: number, startAt: number } } } = {};
+let cacheData: { [type: string]: { [name: string]: CollectData } } = {};
 let tmpData = {};
 let calculatedData = {};
 
@@ -51,6 +58,7 @@ export namespace StatusExporter {
 
   export async function saveStatusJsonFile() {
     await calculateAvgStatus();
+    calculatedData['saveAt'] = new Date();
     await fs.writeFileSync(fileName + '.tmp', JSON.stringify(calculatedData, null, 2), 'utf8');
     return await moveJsonFile(fileName + '.tmp', fileName);
   }
@@ -62,8 +70,9 @@ export namespace StatusExporter {
     await lookupProcess();
     return await _.forEach(tmpData, async (value, type) => {
       await _.forEach(value, (v, k) => {
+        const transactionCount = v.transctionCount || v.count;
         const measuringTime = ((+new Date() - v.startAt) / 1000) || 0.001;
-        const TPS = setDecimalPoint(v.count / measuringTime);
+        const TPS = setDecimalPoint(transactionCount / measuringTime);
         if (!calculatedData[type]) calculatedData[type] = {};
 
         calculatedData[type][k] = {
@@ -90,20 +99,21 @@ export namespace StatusExporter {
     if (!statusExport) return;
     if (!cacheData[type] || !cacheData[type][key]) {
       cacheData[type] = cacheData[type] || {};
-      if (!cacheData[type][key]) cacheData[type][key] = { count: 1, startAt: +new Date() };
+      if (!cacheData[type][key]) cacheData[type][key] = { transactionCount: 1, startAt: +new Date() };
       return;
     }
-    cacheData[type][key]['count'] = Number(cacheData[type][key]['count'] || 0) + 1;
+    cacheData[type][key]['transactionCount'] = Number(cacheData[type][key]['transactionCount'] || 0) + 1;
   };
 
   export async function pushTimeData(type, key, time) {
     if (!statusExport) return;
     if (!cacheData[type] || !cacheData[type][key]) {
       cacheData[type] = cacheData[type] || {};
-      if (!cacheData[type][key]) cacheData[type][key] = { totalTime: time, startAt: +new Date() };
+      if (!cacheData[type][key]) cacheData[type][key] = { totalTime: time, count: 1, startAt: +new Date() };
       return;
     }
 
+    cacheData[type][key]['count'] = Number(cacheData[type][key]['count'] || 0) + 1;
     cacheData[type][key]['totalTime'] = Number(cacheData[type][key]['totalTime'] || 0) + time;
   }
 
