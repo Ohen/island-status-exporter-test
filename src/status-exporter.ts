@@ -30,6 +30,17 @@ function setDecimalPoint(int: number): number {
   return Number(int.toFixed(2));
 }
 
+function makeFileName(args: { name?: string, hostname?: string, servicename?: string }): string {
+  args = args || {};
+  if (args.name && !args.name.match('.json')) {
+    return args.name + '.json';
+  }
+  if (args.hostname || args.servicename) {
+    args.name = _.values(args).join('.') + '.json';
+  }
+  return args.name || 'status.json';
+}
+
 async function lookupProcess(): Promise<any> {
   const usageOptions = { keepHistory: true };
   return new Promise((res, rej) => {
@@ -49,10 +60,7 @@ export namespace StatusExporter {
   export function initialize(using: boolean, option: { name?: string, hostname?: string, servicename?: string }) {
     option = option || {};
     statusExport = using;
-    if (!option.name) option.name = option.hostname + '.' + option.servicename + '.' + 'status.json';
-    console.log('file name', option.name);
-    if (option.name && !option.name.match('.json')) option.name += '.json';
-    fileName = (option.name || 'status.json');
+    fileName = makeFileName(option);
     return fileName;
   }
 
