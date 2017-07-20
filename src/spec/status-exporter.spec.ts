@@ -14,41 +14,25 @@ function spec(fn) {
 const fileName = StatusExporter.initialize(true, { servicename: 'STATUS_EXPORTER', hostname: 'TEST' });
 
 describe('StatusExporter', () => {
-	it('clear Data after Save Status.json', spec(async () => {
-		const name = 'getRpc';
-		const type = 'rpc';
+	it('should save to measure Data', spec(async () => {
+    const type = 'rpc';
+    
+    StatusExporter.collectRequestCount(type);
+    StatusExporter.collectRequestCount(type);
+    StatusExporter.collectRequestCount(type);
+		StatusExporter.collectMeasureData(type, 1000);
+		StatusExporter.collectMeasureData(type, 1000);
+    StatusExporter.collectMeasureData(type, 1000);
 
-		StatusExporter.pushTransactionData(type, name);
-		StatusExporter.pushTransactionData(type, name);
-		StatusExporter.pushTransactionData(type, name);
+		const event_type = 'event';
+		StatusExporter.collectMeasureData(event_type, 100);
+		StatusExporter.collectMeasureData(event_type, 13000);
+		StatusExporter.collectMeasureData(event_type, 100);
 
-		StatusExporter.pushTimeData(type, name, 200);
-		StatusExporter.pushTimeData(type, name, 200);
-		StatusExporter.pushTimeData(type, name, 200);
-		await StatusExporter.saveStatusJsonFile();
-		const result1 = await fs.readFileSync(fileName, 'utf8');
-
-		await StatusExporter.saveStatusJsonFile();
-		const result2 = await fs.readFileSync(fileName, 'utf8');
-	}));
-
-	it('should different cache Data', spec(async () => {
-		const name = 'getRpc';
-		const type = 'rpc';
-		
-		StatusExporter.pushTransactionData(type, name);
-		StatusExporter.pushTransactionData(type, name);
-		StatusExporter.pushTransactionData(type, name);
-
-		StatusExporter.pushTimeData(type, name, 200);
-		StatusExporter.pushTimeData(type, name, 200);
-		StatusExporter.pushTimeData(type, name, 200);
-
-		const name2 = 'eventName';
-		const type2 = 'event';
-		StatusExporter.pushTransactionAndTimeData(type2, name2, 1000);
-		StatusExporter.pushTransactionAndTimeData(type2, name2, 1000);
-		StatusExporter.pushTransactionAndTimeData(type2, name2, 1000);
+		const push_type = 'push';
+		StatusExporter.collectMeasureData(push_type, 100);
+		StatusExporter.collectMeasureData(push_type, 13000);
+		StatusExporter.collectMeasureData(push_type, 100);
 
 		await StatusExporter.saveStatusJsonFile();
 		const result1 = await fs.readFileSync(fileName, 'utf8');
@@ -57,5 +41,5 @@ describe('StatusExporter', () => {
 	afterAll(async (done) => {
 		// await fs.removeSync(fileName);
 		done();
-  });
+	});
 });

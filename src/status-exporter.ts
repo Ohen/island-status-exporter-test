@@ -4,16 +4,18 @@ import * as usage from 'usage';
 import fs = require('fs-extra');
 
 export interface CollectData {
-  totalTime?: number,
+  totalUsedTime?: number,
   count?: number,
+  requestCount?: number,
+  requestStartAt?: number,
   transactionCount?: number,
-  startAt: number
+  executionStartAt?: number
 }
 
 let fileName: string;
 let statusExport: boolean;
-let cacheData: { [type: string]: { [name: string]: CollectData } } = {};
-let tmpData: { [type: string]: { [name: string]: CollectData } } = {};
+let cacheData: { [type: string]: CollectData } = {};
+let tmpData: { [type: string]: CollectData } = {};
 let calculatedData = {};
 
 async function moveJsonFile(oldPath, newPath): Promise<any> {
@@ -65,75 +67,80 @@ export namespace StatusExporter {
   }
 
   export async function saveStatusJsonFile() {
-    await calculateAvgStatus();
+    await calculateStatus();
     calculatedData['saveAt'] = new Date();
     await fs.writeFileSync(fileName + '.tmp', JSON.stringify(calculatedData, null, 2), 'utf8');
     return await moveJsonFile(fileName + '.tmp', fileName);
   }
 
-  export async function calculateAvgStatus() {
+  export async function calculateStatus() {
     if (!statusExport) return;
     tmpData = _.clone(cacheData);
     clearData();
     await lookupProcess();
     return await _.forEach(tmpData, async (value, type) => {
-      await _.forEach(value, (v, k) => {
-        if (!calculatedData[type]) calculatedData[type] = {};
-        calculatedData[type][k] = {};
+      if (!calculatedData[type]) calculatedData[type] = {};
+      if (value.count) {
+        const tps = setDecimalPoint(value.count / ((+new Date() - value.executionStartAt) / 1000) || 0.001);
+        calculatedData[type]['tps'] = tps;
+      }
 
-        if (v.transactionCount) {
-          const measuringTime = ((+new Date() - v.startAt) / 1000) || 0.001;
-          const tps = setDecimalPoint(v.transactionCount / measuringTime);
-          calculatedData[type][k]['tps'] = tps;
-        }
+      if (value.requestCount) {
+        const measureTime = ((+new Date() - value.requestStartAt) / 1000) || 0.001;
+        const rps = setDecimalPoint(value.requestCount / measureTime);
+        console.log('=====', value, rps);
+        calculatedData[type]['rps'] = rps;
+      }
 
-        if (!v.totalTime) return;
-        const avgTime = v.totalTime / v.count;
-        switch (type) {
-          case 'event':
-            calculatedData[type][k]['AvgReceiveMessageTimeByMQ'] = setDecimalPoint(avgTime);
-            break;
-          case 'rpc':
-            calculatedData[type][k]['AvgResponseTime'] = setDecimalPoint(avgTime);
-            break;
-          default:
-            calculatedData[type][k]['AvgTime'] = setDecimalPoint(avgTime);
-        }
-      });
+      if (!value.totalUsedTime) return;
+      const avgTime = value.totalUsedTime / value.count;
+      switch (type) {
+        case 'event':
+        case 'push':
+          calculatedData[type]['AvgReceiveMessageTimeByMQ'] = setDecimalPoint(avgTime);
+          break;
+        case 'endpoint':
+        case 'rpc':
+          calculatedData[type]['AvgExecutionTime'] = setDecimalPoint(avgTime);
+          break;
+        default:
+          calculatedData[type]['AvgTime'] = setDecimalPoint(avgTime);
+      }
     });
   }
 
-  export async function pushTransactionData(type, key) {
+  export async function collectRequestCount(type) {
     if (!statusExport) return;
-    if (!cacheData[type] || !cacheData[type][key]) {
-      cacheData[type] = cacheData[type] || {};
-      if (!cacheData[type][key]) cacheData[type][key] = { transactionCount: 1, startAt: +new Date() };
+    if (!cacheData[type]) {
+      cacheData[type] = cacheData[type] || {
+        requestCount: 1, requestStartAt: +new Date()
+      };
       return;
     }
-    cacheData[type][key]['transactionCount'] = Number(cacheData[type][key]['transactionCount'] || 0) + 1;
-  };
-
-  export async function pushTimeData(type, key, time) {
-    if (!statusExport) return;
-    if (!cacheData[type] || !cacheData[type][key]) {
-      cacheData[type] = cacheData[type] || {};
-      if (!cacheData[type][key]) cacheData[type][key] = { totalTime: time, count: 1, startAt: +new Date() };
+    if (!cacheData[type]['requestCount']){
+      cacheData[type]['requestCount'] = 1;
+      cacheData[type]['requestStartAt'] = +new Date();
       return;
     }
-
-    cacheData[type][key]['count'] = Number(cacheData[type][key]['count'] || 0) + 1;
-    cacheData[type][key]['totalTime'] = Number(cacheData[type][key]['totalTime'] || 0) + time;
+    ++cacheData[type]['requestCount'];
   }
 
-  export async function pushTransactionAndTimeData(type, key, time) {
+  export async function collectMeasureData(type, time) {
     if (!statusExport) return;
-    if (!cacheData[type] || !cacheData[type][key]) {
-      cacheData[type] = cacheData[type] || {};
-      if (!cacheData[type][key]) cacheData[type][key] = { totalTime: time, count: 1, startAt: +new Date() };
+    if (!cacheData[type]) {
+      cacheData[type] = cacheData[type] || {
+        totalUsedTime: time, count: 1, executionStartAt: +new Date()
+      };
+      return;
+    }
+    if (!cacheData[type]['count']){
+      cacheData[type]['count'] = 1;
+      cacheData[type]['executionStartAt'] = +new Date();
+      cacheData[type]['totalUsedTime'] = time;
       return;
     }
 
-    ++cacheData[type][key]['count'];
-    cacheData[type][key]['totalTime'] = Number(cacheData[type][key]['totalTime'] || 0) + time;
+    ++cacheData[type]['count'];
+    cacheData[type]['totalUsedTime'] += time;
   }
 }
