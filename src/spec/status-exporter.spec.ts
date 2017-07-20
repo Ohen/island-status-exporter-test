@@ -35,7 +35,7 @@ describe('StatusExporter', () => {
 	it('should different cache Data', spec(async () => {
 		const name = 'getRpc';
 		const type = 'rpc';
-
+		
 		StatusExporter.pushTransactionData(type, name);
 		StatusExporter.pushTransactionData(type, name);
 		StatusExporter.pushTransactionData(type, name);

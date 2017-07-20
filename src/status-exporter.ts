@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as usage from 'usage';
 import fs = require('fs-extra');
 
-interface CollectData {
+export interface CollectData {
   totalTime?: number,
   count?: number,
   transactionCount?: number,
@@ -13,7 +13,7 @@ interface CollectData {
 let fileName: string;
 let statusExport: boolean;
 let cacheData: { [type: string]: { [name: string]: CollectData } } = {};
-let tmpData = {};
+let tmpData: { [type: string]: { [name: string]: CollectData } } = {};
 let calculatedData = {};
 
 async function moveJsonFile(oldPath, newPath): Promise<any> {
@@ -78,14 +78,14 @@ export namespace StatusExporter {
     await lookupProcess();
     return await _.forEach(tmpData, async (value, type) => {
       await _.forEach(value, (v, k) => {
-        const transactionCount = v.transctionCount || v.count;
-        const measuringTime = ((+new Date() - v.startAt) / 1000) || 0.001;
-        const TPS = setDecimalPoint(transactionCount / measuringTime);
         if (!calculatedData[type]) calculatedData[type] = {};
+        calculatedData[type][k] = {};
 
-        calculatedData[type][k] = {
-          TPS
-        };
+        if (v.transactionCount) {
+          const measuringTime = ((+new Date() - v.startAt) / 1000) || 0.001;
+          const tps = setDecimalPoint(v.transactionCount / measuringTime);
+          calculatedData[type][k]['tps'] = tps;
+        }
 
         if (!v.totalTime) return;
         const avgTime = v.totalTime / v.count;
