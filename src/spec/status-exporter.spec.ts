@@ -20,19 +20,19 @@ describe('StatusExporter', () => {
     StatusExporter.collectRequestCount(type);
     StatusExporter.collectRequestCount(type);
     StatusExporter.collectRequestCount(type);
-		StatusExporter.collectMeasureData(type, 1000);
-		StatusExporter.collectMeasureData(type, 1000);
-    StatusExporter.collectMeasureData(type, 1000);
+		StatusExporter.collectPerformanceData(type, 1000);
+		StatusExporter.collectPerformanceData(type, 1000);
+    StatusExporter.collectPerformanceData(type, 1000);
 
 		const event_type = 'event';
-		StatusExporter.collectMeasureData(event_type, 100);
-		StatusExporter.collectMeasureData(event_type, 13000);
-		StatusExporter.collectMeasureData(event_type, 100);
+		StatusExporter.collectPerformanceData(event_type, 100);
+		StatusExporter.collectPerformanceData(event_type, 13000);
+		StatusExporter.collectPerformanceData(event_type, 100);
 
 		const push_type = 'push';
-		StatusExporter.collectMeasureData(push_type, 100);
-		StatusExporter.collectMeasureData(push_type, 13000);
-		StatusExporter.collectMeasureData(push_type, 100);
+		StatusExporter.collectPerformanceData(push_type, 100);
+		StatusExporter.collectPerformanceData(push_type, 13000);
+		StatusExporter.collectPerformanceData(push_type, 100);
 
 		await StatusExporter.saveStatusJsonFile();
 		const result1 = await fs.readFileSync(fileName, 'utf8');
